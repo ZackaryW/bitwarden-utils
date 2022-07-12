@@ -2,7 +2,6 @@ from PySide6.QtWidgets import (
     QWidget,QVBoxLayout, QLineEdit, QPushButton, QDialog, QTextEdit
 )
 
-
 class CmdDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(CmdDialog, self).__init__(*args, **kwargs)
@@ -32,11 +31,13 @@ class CmdDialog(QDialog):
 class CmdWidget(QWidget):
     # a vertical box layout with a input field and a button
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,console : CmdDialog = None, **kwargs):
         super(CmdWidget, self).__init__(*args, **kwargs)
         self.setLayout(self._create_layout())
-
-        self.consoleDialog = CmdDialog(self)
+        if console is None:
+            self.consoleDialog = CmdDialog(self)
+        else:
+            self.consoleDialog = console
 
     def _create_layout(self):
         layout = QVBoxLayout()

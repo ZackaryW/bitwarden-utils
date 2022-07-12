@@ -55,6 +55,6 @@ class LoginDialog(QDialog):
             # make a popup
             QMessageBox.warning(self, "Error", "Invalid username, must be an email address")
             return self.clear()
-
+        
         # if valid
         return super(LoginDialog, self).accept(*args, **kwargs)
