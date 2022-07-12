@@ -7,6 +7,11 @@ from functools import cached_property as _cached_property
 class BwClient(BwBaseClient):
     def __init__(self, path: str) -> None:
         super().__init__(path)
+        self.session = None
+
+    def _delCache(self, key):
+        if key in self.__dict__:
+            del self.__dict__[key]
 
     def simpleRun(self, *args):
         with self.createCommunication(*args) as proc:
@@ -24,7 +29,18 @@ class BwClient(BwBaseClient):
     def login(self, username, password):
         with self.createCommunication("login", username, password) as proc:
             proc : BwCommunication
-            return proc.commuicateObj()
+            raw = proc.commuicateObj().raw
+            if "logged in" not in raw[0]:
+                return False
+            self._delCache("isLoggedIn")
+        # '$ export BW_SESSION="{session}"'
+        self.session = raw[3].split("=", 1)[1].strip('"')
+        return True
+
+    def logout(self):
+        with self.createCommunication("logout") as proc:
+            self._delCache("isLoggedIn")
+            return
 
     @classmethod
     def find_nearby(cls):
