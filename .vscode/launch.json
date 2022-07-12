@@ -9,6 +9,9 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/bwUtilGui/__main__.py",
+            "args": [
+                "${workspaceFolder}/tests/src/bw.exe"
+            ],
             "console": "integratedTerminal",
             "justMyCode": true
         }
