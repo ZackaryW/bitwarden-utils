@@ -7,7 +7,7 @@ class CmdDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(CmdDialog, self).__init__(*args, **kwargs)
         self.setWindowTitle("Command")
-        self.resize(400, 200)
+        self.resize(800, 400)
         self.setFixedSize(self.size())
         self.setLayout(self._create_layout())
 
@@ -21,6 +21,13 @@ class CmdDialog(QDialog):
         
         return layout
 
+    @property
+    def consoleText(self):
+        return self.console.toPlainText()
+
+    @consoleText.setter
+    def consoleText(self, text):
+        self.console.setPlainText(text)
 
 class CmdWidget(QWidget):
     # a vertical box layout with a input field and a button
@@ -29,15 +36,27 @@ class CmdWidget(QWidget):
         super(CmdWidget, self).__init__(*args, **kwargs)
         self.setLayout(self._create_layout())
 
+        self.consoleDialog = CmdDialog(self)
+
     def _create_layout(self):
         layout = QVBoxLayout()
         self.cmd = QLineEdit()
         layout.addWidget(self.cmd)
 
         self.button = QPushButton("Run")
+        self.button.clicked.connect(self._run)
+
         layout.addWidget(self.button)
         
         return layout
 
     def run_cmd(self, *args):
-        pass
+        parent = self.parent().parent()
+        result = parent.bw_client.simpleRun(*self.cmd.text().split(" "))
+        self.consoleDialog.consoleText = "\n".join(result.raw)
+        self.consoleDialog.exec_()
+        self.consoleDialog.console.clear()
+        self.cmd.clear()
+
+    def _run(self):
+        return self.run_cmd(self.cmd.text().split(" "))

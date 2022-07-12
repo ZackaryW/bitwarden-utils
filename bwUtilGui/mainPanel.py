@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QMainWindow, QToolBar, QStatusBar, QVBoxLayout, QP
 from PySide6.QtGui import QAction, QIcon, Qt, QFont
 from bwUtil.caller import BwClient
 from bwUtilGui.clientDialog import ClientResolveDialog
+from bwUtilGui.cmdWidget import CmdWidget
 import bwUtilGui.styler as styler
 from bwUtilGui.loginDialog import LoginDialog
 
@@ -25,7 +26,7 @@ class MainPanel(QMainWindow):
         self._button_font = QFont("Arial", 30)
 
         # button box vertical layout
-        self.button_grid = QVBoxLayout()
+        self.button_grid = QVBoxLayout(self)
         # set button size
         self.button_grid.setContentsMargins(2, 2, 2, 2)
         self.button_grid.setSpacing(10)
@@ -42,11 +43,8 @@ class MainPanel(QMainWindow):
         self.button_login.setFont(self._button_font)
         styler.set_button_incomplete(self.button_login)
 
-        self.button_run_command = QPushButton("Run Command")
-        self.button_run_command.setStatusTip("Run Command")
-        self.button_run_command.clicked.connect(self._runCmdDialog)
-        self.button_run_command.setFont(self._button_font)
-        self.button_run_command.setEnabled(False)
+        self.widget_run_command = CmdWidget(self)
+        self.widget_run_command.setEnabled(False)
 
         self.button_exit = QPushButton("Exit")
         self.button_exit.setStatusTip("Exit Bitwarden-Utils")
@@ -55,11 +53,9 @@ class MainPanel(QMainWindow):
 
         self.button_grid.addWidget(self.button_cli_client)
         self.button_grid.addWidget(self.button_login)
-        self.button_grid.addWidget(self.button_run_command)
+        self.button_grid.addWidget(self.widget_run_command)
         self.button_grid.addWidget(self.button_exit)
         
-        
-
         self.button_grid.setAlignment(Qt.AlignTop)
 
         # add
@@ -71,6 +67,9 @@ class MainPanel(QMainWindow):
         if self.bw_client is None:
             return
 
+        if not self.widget_run_command.isEnabled():
+            self.widget_run_command.setEnabled(True)
+
         if self.button_cli_client.isEnabled():
             styler.set_button_complete(self.button_cli_client)
             self.button_cli_client.setText("CLI Client: " + self.bw_client.version)
@@ -80,9 +79,7 @@ class MainPanel(QMainWindow):
             styler.set_button_complete(self.button_login)
             self.button_login.setText("Logged In as " + self.bw_client.isLoggedIn)
             self.button_login.setStatusTip("Logged In as " + self.bw_client.isLoggedIn)
-    
-    def _runCmdDialog(self):
-        pass
+     
 
     def _createLoginDialog(self):
         dialog = LoginDialog(self)
