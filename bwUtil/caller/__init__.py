@@ -8,18 +8,18 @@ class BwClient(BwBaseClient):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
+    def simpleRun(self, *args):
+        with self.createCommunication(*args) as proc:
+            proc : BwCommunication
+            return proc.commuicateObj()
+
     @_cached_property
     def version(self):
-        with self.createCommunication("--version") as proc:
-            proc : BwCommunication
-            return proc.commuicateObj().raw[0]
+        return self.simpleRun("--version").raw[0]
 
     @_cached_property
     def isLoggedIn(self):
-        with self.createCommunication("login") as proc:
-            proc : BwCommunication
-            return proc.commuicateObj().login_is_logged_in
-
+        return self.simpleRun("login").login_is_logged_in
 
     def login(self, username, password):
         with self.createCommunication("login", username, password) as proc:
