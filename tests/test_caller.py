@@ -12,9 +12,8 @@ class t_caller(unittest.TestCase):
             self.client = BwClient("tests/src/bw")
 
     def test_caller(self):
-        with self.client.createCommunication("--help") as proc:
-            proc : BwCommunication
-            print(proc.commuicateObj())
+        print(self.client.version)
+        print(self.client.simpleRun("--help"))
 
     @unittest.skip("skipping")
     def test_logout(self):
