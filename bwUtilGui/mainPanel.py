@@ -1,4 +1,5 @@
 import logging
+import os
 from PySide6.QtWidgets import QMainWindow, QToolBar, QStatusBar, QVBoxLayout, QPushButton, QWidget
 from PySide6.QtGui import QAction, QIcon, Qt, QFont
 from bwUtil.caller import BwClient
@@ -35,6 +36,7 @@ class MainPanel(QMainWindow):
         self.button_cli_client.setStatusTip("Resolve CLI Client")
         self.button_cli_client.clicked.connect(self._clientResolveDialog)
         self.button_cli_client.setFont(self._button_font)
+        self.button_cli_client_toggle = False
         styler.set_button_incomplete(self.button_cli_client)
 
         self.button_login = QPushButton("Login")
@@ -70,16 +72,22 @@ class MainPanel(QMainWindow):
         if not self.widget_run_command.isEnabled():
             self.widget_run_command.setEnabled(True)
 
-        if self.button_cli_client.isEnabled():
-            styler.set_button_complete(self.button_cli_client)
+        if not self.button_cli_client_toggle:
+            styler.set_button_complete(self.button_cli_client, disable=False)
             self.button_cli_client.setText("CLI Client: " + self.bw_client.version)
             self.button_cli_client.setStatusTip("Resolved CLI Client: " + self.bw_client.version)
-        
+            self.button_cli_client_toggle = True
+
         if self.button_login.isEnabled() and self.bw_client.isLoggedIn is not None:
             styler.set_button_complete(self.button_login)
             self.button_login.setText("Logged In as " + self.bw_client.isLoggedIn)
             self.button_login.setStatusTip("Logged In as " + self.bw_client.isLoggedIn)
      
+    def _openBwLocation(self):
+        if self.bw_client is None:
+            return
+        # open bitwarden location
+        os.startfile(os.path.dirname(self.bw_client.path))
 
     def _createLoginDialog(self):
         dialog = LoginDialog(self)
@@ -91,6 +99,9 @@ class MainPanel(QMainWindow):
         print(usrname, password)
     
     def _clientResolveDialog(self):
+        if self.button_cli_client_toggle:
+            return self._openBwLocation()
+            
         dialog = ClientResolveDialog(self)
         dialog.exec()
         self._bw_temp_path = dialog.temppath
