@@ -13,6 +13,7 @@ class BwCommunication:
 
     def communicate(self, *args, **kwargs) -> str:
         # to bytes
+        args = list(args)
         for i, arg in enumerate(args):
             if isinstance(arg, str):
                 args[i] = arg.encode("utf-8")        
@@ -44,6 +45,9 @@ class BwBaseClient:
 
         try:
             args = [self.path] + list(args)
+            args = [str(arg).encode("utf-8") for arg in args]
+
+
             proc : _Process = _subprocess.Popen(args, stdin=_subprocess.PIPE, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT)
             self.comm = BwCommunication(proc)
             yield self.comm

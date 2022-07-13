@@ -15,10 +15,16 @@ class LoginDialog(QDialog):
         layout.addWidget(QLabel("Username"))
         self.username = QLineEdit()
         layout.addWidget(self.username)
+
         layout.addWidget(QLabel("Password"))
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.Password)
         layout.addWidget(self.password)
+
+        layout.addWidget(QLabel("TOTP"))
+        self.totp = QLineEdit()
+        layout.addWidget(self.totp)
+
         self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         layout.addWidget(self.buttons)
         self.buttons.button(QDialogButtonBox.Ok).clicked.connect(self.accept)
@@ -31,6 +37,12 @@ class LoginDialog(QDialog):
     def get_password(self):
         return self.password.text()
 
+    def get_totp(self):
+        text = self.totp.text()
+        if not text:
+            return None
+        return text
+
     def reject(self):
         self.password.clear()
         self.username.clear()
@@ -39,6 +51,7 @@ class LoginDialog(QDialog):
     def clear(self):
         self.password.clear()
         self.username.clear()
+        self.totp.clear()
 
     def accept(self, *args, **kwargs):
         

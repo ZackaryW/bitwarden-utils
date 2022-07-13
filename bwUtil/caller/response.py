@@ -35,7 +35,8 @@ class BwResponse:
         try:
             for line in self.rawLines:
                 if "$ export BW_SESSION" in line:
-                    return line.split("=", 1)[1].strip('"')
+                    eline = line.split("=", 1)[1].strip('"').split('"')[0]
+                    return eline
         except:
             return None
 

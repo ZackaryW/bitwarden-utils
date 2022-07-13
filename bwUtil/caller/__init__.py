@@ -24,7 +24,7 @@ class BwClient(BwBaseClient):
             return proc.commuicateObj()
 
     def runWithSession(self, *args):
-        if not self.session is None:
+        if self.session is None:
             raise Exception("session not present")
         args = list(args) + ["--session", self.session]
         with self.createCommunication(*args) as proc:
@@ -40,10 +40,16 @@ class BwClient(BwBaseClient):
     def isLoggedIn(self):
         return self.simpleRun("login").login_is_logged_in
 
-    def login(self, username, password):
-        with self.createCommunication("login", username, password) as proc:
+    def login(self, username, password, totp= None):
+        args = ["login", username, password]
+        if totp is not None:
+            args.extend(["--method","0","--code", totp])
+
+        with self.createCommunication(*args) as proc:
             proc : BwCommunication
             res = proc.commuicateObj()
+            if "incorrect" in res.raw:
+                return False
             if "logged in" not in res.rawLines[0]:
                 return False
             self._delCache("isLoggedIn")
@@ -67,14 +73,53 @@ class BwClient(BwBaseClient):
             return True
         return False
 
-    def get_attachment(self, item_id : str, attchment_name : str, output_path : str):
-        self.runWithSession(
-            "get", "attachment", 
-            attchment_name, "--itemid", item_id,
-            "--output", 
-            output_path
-        )
+    def get_attachment(self, item_id : str,item_name : str, attachment_name : str, output_path : str):
+        if not _os.path.exists(_os.path.join(output_path, item_name)):
+            _os.makedirs(_os.path.join(output_path, item_name), exist_ok=True)
+        
+        if _os.path.exists(_os.path.join(output_path, item_name, attachment_name)):
+            return
 
+        self.runWithSession(
+            "get", 
+            "attachment", attachment_name, 
+            "--itemid", item_id,
+            "--output", _os.path.join(output_path, item_name, attachment_name)
+        )
+        # change permission to everyone can read
+        try:
+            _os.chmod(_os.path.join(output_path, item_name), 0o777)
+            _os.chmod(_os.path.join(output_path, item_name, attachment_name), 0o777)
+        except:
+            pass
+
+    def export_attachments(self, output_path :str, rawData : list = None):
+        if not rawData:
+            if self.lastSynced is None and self.sync():
+                pass
+            
+            rawData = self.runWithSession("list", "items", "--pretty")
+            items = _json.loads(rawData.raw)
+        else:
+            items = rawData
+
+
+        for i, item in enumerate(items):
+            if "attachments" in item:
+                for attachment in item["attachments"]:
+                    self.get_attachment(
+                        item_id=item["id"], 
+                        item_name=item["name"],
+                        attachment_name= attachment["fileName"], 
+                        output_path = output_path
+                    )
+            yield i
+            
+    def export_items(self):
+        rawData = self.runWithSession("list", "items", "--pretty")
+        items = _json.loads(rawData.raw)    
+        return items
+        
     @classmethod
     def find_nearby(cls):
         # check if BW_CLI_PATH is set

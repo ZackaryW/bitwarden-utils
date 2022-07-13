@@ -5,6 +5,7 @@ from PySide6.QtGui import QAction, QIcon, Qt, QFont
 from bwUtil.caller import BwClient
 from bwUtilGui.clientDialog import ClientResolveDialog
 from bwUtilGui.cmdWidget import CmdWidget, CmdDialog
+from bwUtilGui.exportDialog import ExportProgress
 import bwUtilGui.styler as styler
 from bwUtilGui.loginDialog import LoginDialog
 
@@ -15,6 +16,7 @@ class MainPanel(QMainWindow):
         self._bw_temp_path = None
         self.consoleDialog = CmdDialog(self)
         self.loginDialog = LoginDialog(self)
+        self.exportDialog = ExportProgress(self)
 
         self.setWindowTitle("Bitwarden-Utils")
 
@@ -27,9 +29,9 @@ class MainPanel(QMainWindow):
 
     def _initButtons(self):
         self._button_font = QFont("Arial", 30)
-
+        widget = QWidget(self)
         # button box vertical layout
-        self.button_grid = QVBoxLayout(self)
+        self.button_grid = QVBoxLayout()
         # set button size
         self.button_grid.setContentsMargins(2, 2, 2,2)
         self.button_grid.setSpacing(10)
@@ -49,6 +51,7 @@ class MainPanel(QMainWindow):
         self.button_batch_attchment = QPushButton("Export All Attachments")
         self.button_batch_attchment.setDisabled(True)
         self.button_batch_attchment.setFont(self._button_font)
+        self.button_batch_attchment.clicked.connect(self.exportDialog.exec)
 
         self.widget_run_command = CmdWidget(self,console=self.consoleDialog)
         self.widget_run_command.setEnabled(False)
@@ -72,7 +75,7 @@ class MainPanel(QMainWindow):
         self.button_grid.setAlignment(Qt.AlignTop)
 
         # add
-        widget = QWidget()
+        
         widget.setLayout(self.button_grid);
         self.setCentralWidget(widget)
 
@@ -99,7 +102,7 @@ class MainPanel(QMainWindow):
             styler.set_button_incomplete(self.button_login)
             self.button_login.setText("(Need Unlock) Logged In as " + self.bw_client.isLoggedIn)
             self.button_login.setStatusTip("(Need Unlock) Logged In as " + self.bw_client.isLoggedIn)
-            self.widget_run_command.setEnabled(True)
+            self.widget_run_command.setEnabled(False)
         else:
             styler.set_button_incomplete(self.button_login)
             self.button_login.setText("Login")
@@ -122,7 +125,6 @@ class MainPanel(QMainWindow):
         if self.bw_client.isLoggedIn is not None:
             self.loginDialog.username.setText(self.bw_client.isLoggedIn)
             self.loginDialog.username.setEnabled(False)
-    
 
         self.loginDialog.exec()
         # if rejected
@@ -130,11 +132,12 @@ class MainPanel(QMainWindow):
             return
         usrname = self.loginDialog.get_username()
         password = self.loginDialog.get_password()
+        totp = self.loginDialog.get_totp()
 
         if self.bw_client.isLoggedIn is not None:
             res = self.bw_client.unlock(password)
         else:
-            self.bw_client.login(usrname, password)
+            self.bw_client.login(usrname, password, totp)
         
         self._resolveVisuals()
     
