@@ -19,7 +19,11 @@ if __name__ == "__main__":
     from bwUtilGui.mainPanel import MainPanel
     # create the application and the main window
     app = QtWidgets.QApplication(sys.argv)
-    bw_client = BwClient.resolve(path=sys.argv[1])
+    try:
+        path=sys.argv[1]
+    except:
+        path = None
+    bw_client = BwClient.resolve(path)
     window = MainPanel(bw_client=bw_client)
 
     # setup stylesheet
@@ -27,4 +31,4 @@ if __name__ == "__main__":
 
     # run
     window.show()
-    app.exec_()
+    app.exec()

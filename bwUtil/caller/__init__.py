@@ -13,34 +13,41 @@ class BwClient(BwBaseClient):
         if key in self.__dict__:
             del self.__dict__[key]
 
-    def simpleRun(self, *args):
+    def simpleRun(self, *args) -> BwResponse:
+        if self.session is not None:
+            args = list(args) + ["--session", self.session]
+
         with self.createCommunication(*args) as proc:
             proc : BwCommunication
             return proc.commuicateObj()
 
     @_cached_property
     def version(self):
-        return self.simpleRun("--version").raw[0]
+        return self.simpleRun("--version").rawLines[0]
 
-    @_cached_property
+    @property
     def isLoggedIn(self):
         return self.simpleRun("login").login_is_logged_in
 
     def login(self, username, password):
         with self.createCommunication("login", username, password) as proc:
             proc : BwCommunication
-            raw = proc.commuicateObj().raw
-            if "logged in" not in raw[0]:
+            res = proc.commuicateObj()
+            if "logged in" not in res.rawLines[0]:
                 return False
             self._delCache("isLoggedIn")
-        # '$ export BW_SESSION="{session}"'
-        self.session = raw[3].split("=", 1)[1].strip('"')
+        self.session = res.session_extract
         return True
 
     def logout(self):
         with self.createCommunication("logout") as proc:
             self._delCache("isLoggedIn")
             return
+
+    def unlock(self, password):
+        res = self.simpleRun("unlock", password)
+
+        self.session = res.session_extract
 
     @classmethod
     def find_nearby(cls):

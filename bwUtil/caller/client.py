@@ -21,8 +21,7 @@ class BwCommunication:
 
     def commuicateObj(self,  *args, **kwargs) -> BwResponse:
         output =  self.communicate(*args, **kwargs)[0].decode("utf-8")
-        output_list = output.split("\n")
-        return BwResponse(output_list)
+        return BwResponse(output)
         
 class BwBaseClient:
     def __init__(self, path : str) -> None:

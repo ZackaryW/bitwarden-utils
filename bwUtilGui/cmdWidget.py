@@ -54,8 +54,8 @@ class CmdWidget(QWidget):
     def run_cmd(self, *args):
         parent = self.parent().parent()
         result = parent.bw_client.simpleRun(*self.cmd.text().split(" "))
-        self.consoleDialog.consoleText = "\n".join(result.raw)
-        self.consoleDialog.exec_()
+        self.consoleDialog.consoleText = result.raw
+        self.consoleDialog.exec()
         self.consoleDialog.console.clear()
         self.cmd.clear()
 

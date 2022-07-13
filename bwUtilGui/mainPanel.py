@@ -14,10 +14,11 @@ class MainPanel(QMainWindow):
         self.bw_client : BwClient = bw_client
         self._bw_temp_path = None
         self.consoleDialog = CmdDialog(self)
+        self.loginDialog = LoginDialog(self)
 
         self.setWindowTitle("Bitwarden-Utils")
 
-        self.resize(400, 300)
+        self.resize(500, 400)
 
         self.show()
         self._initButtons()
@@ -30,7 +31,7 @@ class MainPanel(QMainWindow):
         # button box vertical layout
         self.button_grid = QVBoxLayout(self)
         # set button size
-        self.button_grid.setContentsMargins(2, 2, 2, 2)
+        self.button_grid.setContentsMargins(2, 2, 2,2)
         self.button_grid.setSpacing(10)
 
         self.button_cli_client = QPushButton("CLI Client")
@@ -41,7 +42,8 @@ class MainPanel(QMainWindow):
         styler.set_button_incomplete(self.button_cli_client)
 
         self.button_login = QPushButton("Login")
-        self.button_login.clicked.connect(self._createLoginDialog)
+        self.button_login.clicked.connect(self._usrAndPassDialog)
+        self.button_login.setDisabled(True)
         self.button_login.setFont(self._button_font)
 
         self.widget_run_command = CmdWidget(self,console=self.consoleDialog)
@@ -68,7 +70,7 @@ class MainPanel(QMainWindow):
         widget = QWidget()
         widget.setLayout(self.button_grid);
         self.setCentralWidget(widget)
-    
+
     def _logoutBw(self):
         self.bw_client.logout()
         self._resolveVisuals()
@@ -83,10 +85,15 @@ class MainPanel(QMainWindow):
             self.button_cli_client.setStatusTip("Resolved CLI Client: " + self.bw_client.version)
             self.button_cli_client_toggle = True
 
-        if self.bw_client.isLoggedIn is not None:
+        if self.bw_client.session is not None and self.bw_client.isLoggedIn is not None:
             styler.set_button_complete(self.button_login)
             self.button_login.setText("Logged In as " + self.bw_client.isLoggedIn)
             self.button_login.setStatusTip("Logged In as " + self.bw_client.isLoggedIn)
+            self.widget_run_command.setEnabled(True)
+        elif self.bw_client.session is None and self.bw_client.isLoggedIn is not None: 
+            styler.set_button_incomplete(self.button_login)
+            self.button_login.setText("(Need Unlock) Logged In as " + self.bw_client.isLoggedIn)
+            self.button_login.setStatusTip("(Need Unlock) Logged In as " + self.bw_client.isLoggedIn)
             self.widget_run_command.setEnabled(True)
         else:
             styler.set_button_incomplete(self.button_login)
@@ -100,14 +107,24 @@ class MainPanel(QMainWindow):
         # open bitwarden location
         os.startfile(os.path.dirname(self.bw_client.path))
 
-    def _createLoginDialog(self):
-        dialog = LoginDialog(self)
-        dialog.exec()
+    def _usrAndPassDialog(self):
+        if self.bw_client.isLoggedIn is not None:
+            self.loginDialog.username.setText(self.bw_client.isLoggedIn)
+            self.loginDialog.username.setEnabled(False)
+    
+
+        self.loginDialog.exec()
         # if rejected
-        if not dialog.result():
+        if not self.loginDialog.result():
             return
-        usrname, password = dialog.get_username(), dialog.get_password()
-        self.bw_client.login(usrname, password)
+        usrname = self.loginDialog.get_username()
+        password = self.loginDialog.get_password()
+
+        if self.bw_client.isLoggedIn is not None:
+            res = self.bw_client.unlock(password)
+        else:
+            self.bw_client.login(usrname, password)
+        
         self._resolveVisuals()
     
     def _clientResolveDialog(self):

@@ -55,8 +55,11 @@ class ClientResolveDialog(QDialog):
         file_dialog.setDirectory(os.getcwd())
         file_dialog.setAcceptMode(QFileDialog.AcceptOpen)
         # allow only 1 selection
-        file_dialog.exec_()
-        self.file_path = file_dialog.selectedFiles()[0]
+        file_dialog.exec()
+        selected_files = file_dialog.selectedFiles()
+        if not selected_files:
+            self.reject()
+        self.file_path = selected_files[0]
         if self.file_path and os.path.isfile(self.file_path) and os.path.exists(self.file_path):
             self.accept()
             
