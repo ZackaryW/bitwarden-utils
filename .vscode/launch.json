@@ -8,7 +8,7 @@
             "name": "Test Gui",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/bwUtilGui/__main__.py",
+            "program": "${workspaceFolder}/bwUtilGui/__init__.py",
             "args": [
                 "${workspaceFolder}/tests/src/bw.exe"
             ],
@@ -19,7 +19,7 @@
             "name": "Test Gui - no bw",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/bwUtilGui/__main__.py",
+            "program": "${workspaceFolder}/bwUtilGui/__init__.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
