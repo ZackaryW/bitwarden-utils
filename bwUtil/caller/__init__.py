@@ -3,6 +3,7 @@ from bwUtil.caller.client import BwBaseClient, BwCommunication
 from bwUtil.caller.response import BwResponse
 import os as _os
 from functools import cached_property as _cached_property
+import json as _json
 
 class BwClient(BwBaseClient):
     def __init__(self, path: str) -> None:
@@ -22,11 +23,20 @@ class BwClient(BwBaseClient):
             proc : BwCommunication
             return proc.commuicateObj()
 
+    def runWithSession(self, *args):
+        if not self.session is None:
+            raise Exception("session not present")
+        args = list(args) + ["--session", self.session]
+        with self.createCommunication(*args) as proc:
+            proc : BwCommunication
+            return proc.commuicateObj()
+
+
     @_cached_property
     def version(self):
         return self.simpleRun("--version").rawLines[0]
 
-    @property
+    @_cached_property
     def isLoggedIn(self):
         return self.simpleRun("login").login_is_logged_in
 
@@ -51,15 +61,19 @@ class BwClient(BwBaseClient):
         self.session = res.session_extract
 
     def sync(self):
-        if self.session is None:
-            return False
-        res = self.simpleRun("sync")
+        res = self.runWithSession("sync")
         if "Syncing complete." in res.raw:
             self.lastSynced = _datetime.now()
             return True
         return False
 
-    
+    def get_attachment(self, item_id : str, attchment_name : str, output_path : str):
+        self.runWithSession(
+            "get", "attachment", 
+            attchment_name, "--itemid", item_id,
+            "--output", 
+            output_path
+        )
 
     @classmethod
     def find_nearby(cls):

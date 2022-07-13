@@ -46,6 +46,10 @@ class MainPanel(QMainWindow):
         self.button_login.setDisabled(True)
         self.button_login.setFont(self._button_font)
 
+        self.button_batch_attchment = QPushButton("Export All Attachments")
+        self.button_batch_attchment.setDisabled(True)
+        self.button_batch_attchment.setFont(self._button_font)
+
         self.widget_run_command = CmdWidget(self,console=self.consoleDialog)
         self.widget_run_command.setEnabled(False)
 
@@ -60,6 +64,7 @@ class MainPanel(QMainWindow):
 
         self.button_grid.addWidget(self.button_cli_client)
         self.button_grid.addWidget(self.button_login)
+        self.button_grid.addWidget(self.button_batch_attchment)        
         self.button_grid.addWidget(self.widget_run_command)
         self.button_grid.addWidget(self.button_logout)
         self.button_grid.addWidget(self.button_exit)
@@ -101,6 +106,12 @@ class MainPanel(QMainWindow):
             self.button_login.setStatusTip("Login to Bitwarden")
             self.widget_run_command.setEnabled(False)
      
+        if self.bw_client.session is None:
+            self.button_batch_attchment.setDisabled(True)
+        else:
+            self.button_batch_attchment.setDisabled(False)
+            
+
     def _openBwLocation(self):
         if self.bw_client is None:
             return
