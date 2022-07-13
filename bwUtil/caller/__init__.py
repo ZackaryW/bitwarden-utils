@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from datetime import datetime as _datetime
 from bwUtil.caller.client import BwBaseClient, BwCommunication
 from bwUtil.caller.response import BwResponse
 import os as _os
@@ -8,6 +8,7 @@ class BwClient(BwBaseClient):
     def __init__(self, path: str) -> None:
         super().__init__(path)
         self.session = None
+        self.lastSynced = None
 
     def _delCache(self, key):
         if key in self.__dict__:
@@ -48,6 +49,17 @@ class BwClient(BwBaseClient):
         res = self.simpleRun("unlock", password)
 
         self.session = res.session_extract
+
+    def sync(self):
+        if self.session is None:
+            return False
+        res = self.simpleRun("sync")
+        if "Syncing complete." in res.raw:
+            self.lastSynced = _datetime.now()
+            return True
+        return False
+
+    
 
     @classmethod
     def find_nearby(cls):
