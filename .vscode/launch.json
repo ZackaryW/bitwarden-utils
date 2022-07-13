@@ -14,6 +14,14 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Test Gui - no bw",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/bwUtilGui/__main__.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
