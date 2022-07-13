@@ -44,7 +44,7 @@ class CmdWidget(QWidget):
         self.cmd = QLineEdit()
         layout.addWidget(self.cmd)
 
-        self.button = QPushButton("Run")
+        self.button = QPushButton("Run Command")
         self.button.clicked.connect(self._run)
 
         layout.addWidget(self.button)
