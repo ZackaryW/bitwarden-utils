@@ -15,7 +15,7 @@ downloadtempFolder : str = None
 @click.option('--password', type=str, required=False)
 @click.option('--totp', type=str, required=False)
 @click.option('--downloadtemp', is_flag = True, default=False)
-@click.option('--sync', is_flag = True, default=False)
+@click.option('--sync/--no-sync', default=True)
 @click.option('--export', type=str, required=False)
 def clickMain(
     username, 
