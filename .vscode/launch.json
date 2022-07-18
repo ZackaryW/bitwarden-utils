@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Test Cli",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/bwUtilCli.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Test Gui",
             "type": "python",
             "request": "launch",
