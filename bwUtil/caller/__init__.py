@@ -114,6 +114,15 @@ class BwClient(BwBaseClient):
             return True
         return False
 
+    def listItems(self):
+        """
+        lists all items in bitwarden
+        """
+
+        res = self.simpleRun("list", "items", "--pretty")
+        items = _json.loads(res.raw)
+        return items
+
     def get_attachment(self, item_id : str,item_name : str, attachment_name : str, output_path : str):
         """
         downloads an attachment from bitwarden
@@ -183,7 +192,7 @@ class BwClient(BwBaseClient):
                         attachment_name= attachment["fileName"], 
                         output_path = output_path
                     )
-            yield i
+            yield i+1
             
     def export_items(self):
         rawData = self.runWithSession("list", "items", "--pretty")
@@ -191,21 +200,45 @@ class BwClient(BwBaseClient):
         return items
         
     @classmethod
-    def find_nearby(cls):
+    def find_nearby(cls, lv_accepted : int = 1)-> 'BwClient':
         """
         attempts to find a bitwarden cli in cwd and environment variables
 
         returns None if not found
         """
+        def dig_dir(path, lv_accepted = 1):
+            if lv_accepted < 0:
+                return None
+
+            for root, dirs, files in _os.walk(path):
+                for file in files:
+                    filePath = _os.path.join(root, file)
+                    if _os.path.getsize(filePath) <= 10 * 1024 * 1024:
+                        continue
+                    if not file.startswith("bw"):
+                        continue
+                    if not _os.path.isfile(filePath):
+                        continue
+                    if filePath.endswith(".py"):
+                        continue
+                    
+                    return _os.path.join(root, file)
+                for dir in dirs:
+                    if dir.startswith("."):
+                        continue
+
+                    res = dig_dir(_os.path.join(root, dir), lv_accepted - 1)
+                    if res is not None:
+                        return res
 
         # check if BW_CLI_PATH is set
         if "BW_CLI_PATH" in _os.environ:
             return cls(_os.environ["BW_CLI_PATH"])
 
         cwd = _os.getcwd()
-        for file in _os.listdir(cwd):
-            if file.startswith("bw") and _os.path.isfile(file):
-                return cls(_os.path.join(cwd, file))
+        res = dig_dir(cwd, lv_accepted)
+        if res is not None:
+            return cls(res)
         return None
 
     @classmethod
