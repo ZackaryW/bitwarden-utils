@@ -236,7 +236,10 @@ class BwClient(BwBaseClient):
             return cls(_os.environ["BW_CLI_PATH"])
 
         cwd = _os.getcwd()
-        res = dig_dir(cwd, lv_accepted)
+        try:
+            res = dig_dir(cwd, lv_accepted)
+        except:
+            res = None
         if res is not None:
             return cls(res)
         return None
