@@ -2,6 +2,12 @@
 
 a simple wrapper around bitwarden cli with its primary job to export all attachments
 
+## dependencies
+1. PySide6
+2. click
+3. qt-material
+4. requests
+
 ## setup with github
 ```
 pip install -e git+https://github.com/ZackaryW/bitwarden-utils.git#egg=bwutil[all]
