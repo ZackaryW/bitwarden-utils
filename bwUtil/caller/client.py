@@ -84,13 +84,16 @@ class BwBaseClient:
         ```
 
         """
+        if not hasattr(self, "comm"):
+            self.comm = None
 
-        self.comm = None
+        if self.comm is not None:
+            raise Exception("comm is already set")
+        
 
         try:
             args = [self.path] + list(args)
             args = [str(arg).encode("utf-8") for arg in args]
-
 
             proc : _Process = _subprocess.Popen(args, stdin=_subprocess.PIPE, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT)
             self.comm = BwCommunication(proc)
