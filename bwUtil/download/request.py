@@ -6,6 +6,10 @@ import hashlib
 import zipfile
 
 def _downloadUrlMatch(assets, starts_with : str, ends_with : str):
+    """
+    this method will find the download url that matches the given parameters
+    """
+
     for asset in assets:
         download_link :str = asset["browser_download_url"]
         download_filename = download_link.rsplit("/", 1)[1]
@@ -13,11 +17,22 @@ def _downloadUrlMatch(assets, starts_with : str, ends_with : str):
             return download_link
 
 def downloadCli(platform : typing.Literal["windows", "linux", "macos"], destination : str, verify : bool = True):
+    """
+    this method will download the latest version of bitwarden cli and verifies it if verify is True
+
+    Args:
+        platform: the platform to download the cli for
+        destination (str): the path to download the cli to
+        verify (bool, optional): Defaults to True. if True, the cli will be verified
+    """
+
     if not os.path.isdir(destination):
         raise Exception("Destination is not a directory")
 
     if not os.path.exists(destination):
         os.makedirs(destination, exist_ok=True)
+
+    # parsing through github releases
 
     baseurl = "https://api.github.com/repos/bitwarden/clients/releases"
     res = requests.get(baseurl)
@@ -31,6 +46,7 @@ def downloadCli(platform : typing.Literal["windows", "linux", "macos"], destinat
         CliAssets = asset["assets"]
         break
     
+    # extract download links
     if (downloadUrl := _downloadUrlMatch(CliAssets, f"bw-{platform}", ".zip")) is None:
         raise Exception("Could not find download link")
 
