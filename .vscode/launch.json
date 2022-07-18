@@ -9,7 +9,7 @@
             "name": "Test Cli",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/bwUtilCli.py",
+            "program": "${workspaceFolder}/bwUtilCli/__init__.py",
             "args": [
                 "--bwpath", "${workspaceFolder}/tests/src/bw.exe",
             ],
