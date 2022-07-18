@@ -1,3 +1,9 @@
+"""
+based on PySide6 (PyQt6)
+
+current gui implementation is not flexible and maintainable enough to be justified for extensions
+"""
+
 if __name__ == '__main__':
     import logging
     import sys
