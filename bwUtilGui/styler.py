@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QToolBar, QStatusBar, QVBoxLayout, QPushButton, QWidget
-from PySide6.QtGui import QAction, QIcon, Qt, QFont
+from PySide6.QtWidgets import QPushButton
 
 def set_button_complete(button : QPushButton, disable : bool = True):
     if disable:
