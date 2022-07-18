@@ -1,5 +1,8 @@
 import os
 import click 
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from bwUtil.caller import BwClient
 from bwUtil.download import secureDownloadMethod
 
@@ -15,7 +18,7 @@ downloadtempFolder : str = None
 @click.option('--sync', is_flag = True, default=False)
 @click.option('--dig', type=int, default=2)
 @click.option('--export', type=str, required=False)
-def main(
+def clickMain(
     username, 
     password, 
     bwpath, 
@@ -118,8 +121,11 @@ def main(
 
     print("Done")
 
+def main():
+    clickMain()
+    if downloadtempFolder:
+        os.remove(downloadtempFolder)
+
 
 if __name__ == "__main__":
     main()
-    if downloadtempFolder:
-        os.remove(downloadtempFolder)
