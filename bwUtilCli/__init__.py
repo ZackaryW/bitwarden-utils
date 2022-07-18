@@ -34,6 +34,10 @@ def clickMain(
     print("Bitwarden Utils CLI")
 
     # init client
+    if bwpath is None:
+        print("bw (cli) not found, please specify path")
+        return
+
     bw = BwClient.resolve(bwpath)
 
     if bw is None and downloadtemp and (download := secureDownloadMethod()) is not None:
