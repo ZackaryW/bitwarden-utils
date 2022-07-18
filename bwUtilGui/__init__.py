@@ -17,7 +17,6 @@ def create_app(logging :bool = False):
     
     parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(parent_path)
-    create_app()
 
     from PySide6 import QtWidgets
     # from PySide2 import QtWidgets
