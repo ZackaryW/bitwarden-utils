@@ -207,7 +207,7 @@ class BwClient(BwBaseClient):
         returns None if not found
         """
         def dig_dir(path, lv_accepted = 1):
-            if lv_accepted < 0:
+            if lv_accepted <= 0:
                 return None
 
             for root, dirs, files in _os.walk(path):
