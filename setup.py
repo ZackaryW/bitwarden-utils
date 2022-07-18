@@ -24,6 +24,10 @@ setup(
         ],
         'cli' : [
             'click',
+        ],
+        "all" : [
+            'PySide6',
+            'click',
         ]
     },
     entry_points={
