@@ -16,7 +16,6 @@ downloadtempFolder : str = None
 @click.option('--totp', type=str, required=False)
 @click.option('--downloadtemp', is_flag = True, default=False)
 @click.option('--sync', is_flag = True, default=False)
-@click.option('--dig', type=int, default=2)
 @click.option('--export', type=str, required=False)
 def clickMain(
     username, 
@@ -25,7 +24,6 @@ def clickMain(
     downloadtemp, 
     sync, 
     runcmd,
-    dig,
     totp=None,
     export=None, 
 ):
