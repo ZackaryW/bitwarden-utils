@@ -21,6 +21,7 @@ setup(
     extras_require= {
         'gui' : [
             'PySide6',
+            'qt-material'
         ],
         'cli' : [
             'click',
@@ -28,6 +29,7 @@ setup(
         "all" : [
             'PySide6',
             'click',
+            'qt-material'
         ]
     },
     entry_points={
