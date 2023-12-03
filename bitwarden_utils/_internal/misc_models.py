@@ -8,4 +8,4 @@ class Status(TypedDict):
     lastSync : typing.Optional[str]
     userEmail : typing.Optional[str]
     userId : typing.Optional[str]
-    status : typing.Literal["locked", "unlocked"]
+    status : typing.Literal["locked", "unlocked", "unauthenticated"]
