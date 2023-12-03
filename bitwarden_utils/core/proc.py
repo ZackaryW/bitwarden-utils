@@ -25,7 +25,7 @@ class BwProc:
 
     def __prep_args(self, *args):
         cmd = [self.path]
-        cmd += list(args)
+        cmd += list([str(x) for x in args])
         if self.session:
             cmd += ["--session", self.session]
 
@@ -79,11 +79,57 @@ class BwProc:
     def isLocked(self):
         return self.status["status"] == "locked"
 
+    @staticmethod
+    def __session_extract(raw):
+        """
+        it will extract the session from the raw response
+
+        Returns:
+            str: session if present else None
+        """
+
+        if "$ export BW_SESSION" not in raw:
+            return None
+        
+        rawlines = raw.split("\n")
+        try:
+            for line in rawlines:
+                if "$ export BW_SESSION" in line:
+                    eline = line.split("=", 1)[1].strip('"').split('"')[0]
+                    return eline
+        except Exception:
+            return None
+
     @classmethod
     def login(
         cls,
+        path : str,
         username : str,
         password : str,
         totp : str = None
     ):
-        pass
+        args = ["login", username, password]
+        if totp:
+            args += ["--method", "0","--code", totp]
+
+        proc = cls(path)
+        if proc.status["status"] != "unauthenticated":
+            raise Exception("Already logged in, please use unlock")
+
+        res = proc.exec(*args)
+        proc.session = cls.__session_extract(res)
+        return proc
+
+    @classmethod
+    def unlock(
+        cls,
+        password : str,
+        path : str = "bw",
+    ):
+        args = ["unlock", password]
+        proc = cls(path)
+
+        res = proc.exec(*args)
+        proc.session = cls.__session_extract(res)
+        return proc
+    
