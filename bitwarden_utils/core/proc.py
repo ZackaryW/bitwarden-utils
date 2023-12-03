@@ -4,7 +4,7 @@ import os
 import subprocess
 from typing import Any
 
-from bitwarden_utils._internal.status_model import Status
+from bitwarden_utils._internal.misc_models import Status
 
 @dataclass
 class BwProc:
