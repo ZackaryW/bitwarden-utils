@@ -1,8 +1,2 @@
-from bitwarden_utils._internal.release_handler import (
-    GLOBAL_RELEASE_HANDLER as BitwardenGithubReleases
-)
-
-from bitwarden_utils.core.proc import BwProc
-from bitwarden_utils.core.warden_proc import BWardenProc
-
-
+from bitwarden_utils.core.python_client import BwPyClient
+from bitwarden_utils.core.proc import BwProc, BwProcInfo
