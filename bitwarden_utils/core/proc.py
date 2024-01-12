@@ -12,14 +12,18 @@ from bitwarden_utils.core.utils import classproperty, session_extract
 import subprocess
 
 class BwProc:
+    def __init__(self) -> None:
+        raise Exception("Not meant to be instantiated")
+    
     path : str = "bw"
-    sessionR : SessionRetainInterface = lambda : None # noqa
+    sessionR : SessionRetainInterface = None 
     sessionRType : typing.Type[SessionRetainInterface] = InMemorySR
     
-    clientValidation : typing.Callable = None
-    
+    preExecCallbacks : typing.List[typing.Callable] = []
+    postExecCallbacks : typing.List[typing.Callable] = []
+        
     @classproperty
-    def info(cls):
+    def info(cls) -> 'BwProcInfo':
         return BwProcInfo
     
     @classmethod
@@ -52,10 +56,17 @@ class BwProc:
         cls.sessionR = cls.sessionRType(session_extract(res))
     
     @classmethod
+    def __get_session(cls):
+        if cls.sessionR is None:
+            return None
+    
+        return cls.sessionR()
+    
+    @classmethod
     def __prep_args(cls, *args):
         cmd = [cls.path]
         cmd += list([str(x) for x in args])
-        session = cls.sessionR()
+        session = cls.__get_session()
         if session:
             cmd += ["--session", session]
         return cmd
@@ -66,8 +77,8 @@ class BwProc:
         *args, 
         strip : bool =True
     ):
-        if cls.clientValidation is not None and not cls.clientValidation(BwProcInfo):
-            raise Exception("Client validation failed")
+        for method in BwProc.preExecCallbacks:
+            method()
             
         args = cls.__prep_args(*args)
         ret = subprocess.run(args, stdout=subprocess.PIPE, check=True)
@@ -77,6 +88,9 @@ class BwProc:
         if strip:
             ret_output = ret_output.strip()
 
+        for method in BwProc.postExecCallbacks:
+            method(ret_output)
+        
         return ret_output
     
     @classmethod
@@ -93,6 +107,9 @@ class BwProc:
 
     
 class BwProcInfo:
+    def __init__(self) -> None:
+        raise Exception("Not meant to be instantiated")
+    
     @classproperty
     def last_modified(cls):
         if cls.only_bw:
@@ -122,6 +139,10 @@ class BwProcInfo:
     @classproperty
     def isLocked(cls):
         return cls.status["status"] == "locked"
+    
+    @classproperty
+    def notLoggedIn(cls):
+        return cls.status["status"] == "unauthenticated"
     
 info_methods = {
     x: BwProcInfo.__dict__[x] for x in dir(BwProcInfo) if not x.startswith("_")

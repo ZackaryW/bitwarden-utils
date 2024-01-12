@@ -5,6 +5,9 @@ from bitwarden_utils.core.models.item import Attachment, BwItem
 import os
 
 class BwPyClient:
+    def __init__(self) -> None:
+        raise Exception("Not meant to be instantiated")
+    
     @staticmethod
     def sync():
         return BwProc.exec("sync")
