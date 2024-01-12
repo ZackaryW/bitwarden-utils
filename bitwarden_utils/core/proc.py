@@ -1,45 +1,86 @@
-from dataclasses import dataclass
+
+import typing
 import json
 import os
+
+from bitwarden_utils.core.session_retain import (
+    InMemorySR,
+    SessionRetainInterface
+)
+from bitwarden_utils.core.models.status import Status
+from bitwarden_utils.core.utils import classproperty, session_extract
 import subprocess
-from typing import Any
 
-from bitwarden_utils._internal.misc_models import Status
-
-@dataclass
 class BwProc:
+    def __init__(self) -> None:
+        raise Exception("Not meant to be instantiated")
+    
     path : str = "bw"
-    session : str = None
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name == "path" and "path" in self.__dict__:
-            raise Exception("Cannot change path")
-        super().__setattr__(__name, __value)
-
-    def __post_init__(self):
-        if not os.path.exists(self.path) and not self.path == "bw":
-            raise FileNotFoundError(f"{self.path} does not exist")
+    sessionR : SessionRetainInterface = None 
+    sessionRType : typing.Type[SessionRetainInterface] = InMemorySR
+    
+    preExecCallbacks : typing.List[typing.Callable] = []
+    postExecCallbacks : typing.List[typing.Callable] = []
         
-        if not self.only_bw:
-            self.__recorded_mdate = os.path.getmtime(self.path)
+    @classproperty
+    def info(cls) -> 'BwProcInfo':
+        return BwProcInfo
+    
+    @classmethod
+    def setSessionType(
+        cls, type : typing.Literal["memory"]
+    ):
+        match type:
+            case "memory":
+                cls.sessionRType = InMemorySR
+            case _:
+                raise NotImplementedError
+    
+    @classmethod
+    def login(
+        cls,
+        username : str,
+        password : str,
+        totp : str = None,
+        path : str = "bw",
+    ):
+        args = ["login", username, password]
+        if totp:
+            args += ["--method", "0","--code", totp]
 
-    def __prep_args(self, *args):
-        cmd = [self.path]
+        cls.path = path
+        if BwProcInfo.status["status"] != "unauthenticated":
+            raise Exception("Already logged in, please use unlock")
+
+        res = cls.exec(*args)
+        cls.sessionR = cls.sessionRType(session_extract(res))
+    
+    @classmethod
+    def __get_session(cls):
+        if cls.sessionR is None:
+            return None
+    
+        return cls.sessionR()
+    
+    @classmethod
+    def __prep_args(cls, *args):
+        cmd = [cls.path]
         cmd += list([str(x) for x in args])
-        if self.session:
-            cmd += ["--session", self.session]
-
+        session = cls.__get_session()
+        if session:
+            cmd += ["--session", session]
         return cmd
 
+    @classmethod
     def exec(
-        self, 
+        cls, 
         *args, 
         strip : bool =True
     ):
-        if not self.only_bw and self.last_modified != self.__recorded_mdate:
-            raise Exception("File has been tampered")
-
-        args = self.__prep_args(*args)
+        for method in BwProc.preExecCallbacks:
+            method()
+            
+        args = cls.__prep_args(*args)
         ret = subprocess.run(args, stdout=subprocess.PIPE, check=True)
         # decode
         ret_output = ret.stdout.decode()
@@ -47,79 +88,11 @@ class BwProc:
         if strip:
             ret_output = ret_output.strip()
 
+        for method in BwProc.postExecCallbacks:
+            method(ret_output)
+        
         return ret_output
-
-    @property
-    def last_modified(self):
-        if self.only_bw:
-            return None
-        
-        return os.path.getmtime(self.path)
     
-    @property
-    def last_accessed(self):
-        if self.only_bw:
-            return None
-        
-        return os.path.getatime(self.path)
-    
-    @property
-    def only_bw(self):
-        return self.path == "bw"
-
-    @property
-    def version(self):
-        return self.exec("--version")
-    
-    @property
-    def status(self)-> Status:
-        return json.loads(self.exec("status"))
-
-    @property
-    def isLocked(self):
-        return self.status["status"] == "locked"
-
-    @staticmethod
-    def __session_extract(raw):
-        """
-        it will extract the session from the raw response
-
-        Returns:
-            str: session if present else None
-        """
-
-        if "$ export BW_SESSION" not in raw:
-            return None
-        
-        rawlines = raw.split("\n")
-        try:
-            for line in rawlines:
-                if "$ export BW_SESSION" in line:
-                    eline = line.split("=", 1)[1].strip('"').split('"')[0]
-                    return eline
-        except Exception:
-            return None
-
-    @classmethod
-    def login(
-        cls,
-        path : str,
-        username : str,
-        password : str,
-        totp : str = None
-    ):
-        args = ["login", username, password]
-        if totp:
-            args += ["--method", "0","--code", totp]
-
-        proc = cls(path)
-        if proc.status["status"] != "unauthenticated":
-            raise Exception("Already logged in, please use unlock")
-
-        res = proc.exec(*args)
-        proc.session = cls.__session_extract(res)
-        return proc
-
     @classmethod
     def unlock(
         cls,
@@ -127,9 +100,54 @@ class BwProc:
         path : str = "bw",
     ):
         args = ["unlock", password]
-        proc = cls(path)
+        cls.path = path
 
-        res = proc.exec(*args)
-        proc.session = cls.__session_extract(res)
-        return proc
+        res = cls.exec(*args)
+        cls.sessionR = cls.sessionRType(session_extract(res))
+
     
+class BwProcInfo:
+    def __init__(self) -> None:
+        raise Exception("Not meant to be instantiated")
+    
+    @classproperty
+    def last_modified(cls):
+        if cls.only_bw:
+            return None
+        
+        return os.path.getmtime(BwProc.path)
+    
+    @classproperty
+    def last_accessed(cls):
+        if cls.only_bw:
+            return None
+        
+        return os.path.getatime(BwProc.path)
+    
+    @classproperty
+    def only_bw(cls):
+        return BwProc.path == "bw"
+
+    @classproperty
+    def version(cls):
+        return BwProc.exec("--version")
+    
+    @classproperty
+    def status(cls) -> Status:
+        return json.loads(BwProc.exec("status"))
+
+    @classproperty
+    def isLocked(cls):
+        return cls.status["status"] == "locked"
+    
+    @classproperty
+    def notLoggedIn(cls):
+        return cls.status["status"] == "unauthenticated"
+    
+info_methods = {
+    x: BwProcInfo.__dict__[x] for x in dir(BwProcInfo) if not x.startswith("_")
+}
+
+proc_methods = {
+    x : BwProc.__dict__[x] for x in dir(BwProc) if not x.startswith("_")
+}

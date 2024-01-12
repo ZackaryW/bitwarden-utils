@@ -1,14 +1,6 @@
-
 import typing
 from typing_extensions import TypedDict
 from pydantic import BaseModel, ConfigDict, Field
-
-class Status(TypedDict):
-    serverUrl : typing.Optional[str]
-    lastSync : typing.Optional[str]
-    userEmail : typing.Optional[str]
-    userId : typing.Optional[str]
-    status : typing.Literal["locked", "unlocked", "unauthenticated"]
 
 
 class Attachment(TypedDict):
@@ -19,7 +11,7 @@ class Attachment(TypedDict):
     url : str
 
 
-class Item(BaseModel):
+class BwItem(BaseModel):
     id : str
     organizationId: typing.Optional[str] = None
     folderId : typing.Optional[str] = None
